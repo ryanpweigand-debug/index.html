@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Agoge Fellow Scoring Dashboard</title>
+<style>
+  :root {
+    --nd-blue: #0f3769;
+    --nd-gold: #d19f4f;
+    --uva-blue: #005596;
+    --uva-orange: #26bcd7;
+    --accept-green: #145A14;
+    --accept-bg: #F0F8F0;
+    --waitlist-amber: #924E00;
+    --waitlist-bg: #FDF5DC;
+    --flag-red: #8B0000;
+    --flag-bg: #FDF0F0;
+    --gray-100: #F5F5F5;
+    --gray-200: #E8E8E8;
+    --gray-400: #9E9E9E;
+    --gray-700: #444444;
+    --white: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+    background: #F0F2F5;
+    color: var(--gray-700);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    background: var(--nd-blue);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .header-title { color: var(--white); }
+  .header-title .org { font-size: 11px; color: var(--nd-gold); letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+  .header-title h1 { font-size: 18px; font-weight: 700; color: var(--white); }
+  .header-title .sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+  .header-badges { display: flex; gap: 10px; align-items: center; }
+  .badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-gold { background: var(--nd-gold); color: var(--nd-blue); }
+  .badge-outline { border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); }
+
+  /* ── Layout ── */
+  .main { max-width: 1400px; margin: 0 auto; padding: 24px 28px; }
+
+  /* ── Tabs ── */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--gray-200);
+  }
+  .tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-400);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .tab-btn:hover { color: var(--nd-blue); }
+  .tab-btn.active { color: var(--nd-blue); border-bottom-color: var(--nd-gold); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--nd-blue);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--nd-gold);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── Score bands ── */
+  .band-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .band-accept { background: var(--accept-bg); color: var(--accept-green); }
+  .band-waitlist { background: var(--waitlist-bg); color: var(--waitlist-amber); }
+  .band-flag { background: var(--flag-bg); color: var(--flag-red); }
+  .band-strong { background: #E8F5E9; color: #1B5E20; }
+
+  /* ── Dual score display ── */
+  .dual-score-wrap {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .score-pill {
+    padding: 5px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 52px;
+    text-align: center;
+  }
+  .score-pill.formal { background: var(--nd-blue); color: var(--white); }
+  .score-pill.qual { background: var(--uva-orange); color: var(--white); }
+  .score-pill.composite { background: var(--nd-gold); color: var(--nd-blue); }
+  .score-label { font-size: 10px; color: var(--gray-400); text-align: center; margin-top: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── Overview Table ── */
+  .overview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .overview-table th {
+    background: var(--nd-blue);
+    color: var(--white);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .overview-table td {
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: middle;
+  }
+  .overview-table tr:nth-child(even) td { background: var(--gray-100); }
+  .overview-table tr:hover td { background: #E6EFF7; }
+  .overview-table td:first-child { font-weight: 600; color: var(--nd-blue); }
+  .cand-name { font-weight: 700; font-size: 13px; color: var(--nd-blue); }
+  .cand-sport { font-size: 11px; color: var(--gray-400); }
+
+  /* ── Bar chart ── */
+  .bar-container { width: 100%; max-width: 120px; }
+  .bar-track { background: var(--gray-200); border-radius: 4px; height: 7px; width: 100%; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+  .bar-formal { background: var(--nd-blue); }
+  .bar-qual { background: var(--uva-orange); }
+  .bar-composite { background: var(--nd-gold); }
+  .bar-label { font-size: 10px; color: var(--gray-400); margin-bottom: 3px; }
+
+  /* ── Candidate detail panel ── */
+  .cand-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+  .cand-card {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    border-top: 4px solid var(--nd-blue);
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+  }
+  .cand-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+  .cand-card.flag-eligible { border-top-color: var(--flag-red); }
+  .cand-card.flag-strong { border-top-color: var(--accept-green); }
+  .cand-card.flag-mid { border-top-color: var(--uva-orange); }
+  .cand-card.flag-waitlist { border-top-color: var(--gray-400); }
+
+  .cand-header {
+    padding: 14px 16px 10px;
+    background: var(--gray-100);
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .cand-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .cand-name-block .name { font-size: 15px; font-weight: 700; color: var(--nd-blue); }
+  .cand-name-block .meta { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+  .score-trio { display: flex; gap: 8px; align-items: flex-end; }
+  .score-block { text-align: center; }
+
+  .cand-body { padding: 14px 16px; }
+
+  /* ── Category bars ── */
+  .cat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .cat-name { font-size: 11px; color: var(--gray-700); width: 110px; flex-shrink: 0; }
+  .cat-track { flex: 1; background: var(--gray-200); border-radius: 3px; height: 6px; overflow: hidden; }
+  .cat-fill { height: 100%; border-radius: 3px; }
+  .cat-score { font-size: 11px; font-weight: 700; width: 24px; text-align: right; flex-shrink: 0; }
+
+  /* Qualitative category colors */
+  .q-presence { background: #7B4FBE; }
+  .q-hunger { background: #C0392B; }
+  .q-coachability { background: #2980B9; }
+  .q-network { background: #27AE60; }
+  .q-curiosity { background: #E67E22; }
+  .q-followthrough { background: #8E44AD; }
+
+  /* ── Flags/notes ── */
+  .flag-list { margin-top: 10px; }
+  .flag-item {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--gray-200);
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+  .flag-item:last-child { border-bottom: none; }
+  .flag-icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+  .flag-text { color: var(--gray-700); }
+  .flag-text strong { color: var(--nd-blue); }
+
+  /* ── Radar / Spider chart ── */
+  .radar-wrap { display: flex; justify-content: center; padding: 8px 0; }
+  svg.radar { overflow: visible; }
+
+  /* ── Scoring rubric ── */
+  .rubric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .rubric-cat {
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .rubric-cat-header {
+    background: var(--nd-blue);
+    color: var(--white);
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .rubric-cat-header .weight { background: var(--nd-gold); color: var(--nd-blue); border-radius: 8px; padding: 1px 7px; font-size: 10px; }
+  .rubric-levels { padding: 0; }
+  .rubric-level {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--gray-200);
+    font-size: 12px;
+    display: flex;
+    gap: 10px;
+  }
+  .rubric-level:last-child { border-bottom: none; }
+  .rubric-level:nth-child(odd) { background: var(--gray-100); }
+  .level-score { font-weight: 700; min-width: 24px; color: var(--nd-blue); }
+  .level-desc { color: var(--gray-700); line-height: 1.4; }
+
+  /* ── Qual rubric distinct styling ── */
+  .rubric-cat.qual .rubric-cat-header { background: var(--uva-blue); }
+  .rubric-cat.qual .rubric-cat-header .weight { background: var(--uva-orange); color: var(--white); }
+
+  /* ── Comparison chart ── */
+  .compare-section { margin-top: 20px; }
+  .compare-bars-wrap { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+  .compare-row { display: flex; align-items: center; gap: 12px; }
+  .compare-name { font-size: 12px; font-weight: 600; color: var(--nd-blue); width: 120px; flex-shrink: 0; }
+  .compare-tracks { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .compare-track { display: flex; align-items: center; gap: 6px; }
+  .compare-fill { height: 10px; border-radius: 4px; transition: width 0.6s ease; }
+  .compare-val { font-size: 11px; font-weight: 700; width: 28px; text-align: right; }
+
+  /* ── Callouts ── */
+  .callout {
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .callout strong { font-weight: 700; }
+  .callout-blue { background: #E6EFF7; border-left: 4px solid var(--uva-blue); color: var(--uva-blue); }
+  .callout-gold { background: #FBF3E2; border-left: 4px solid var(--nd-gold); color: #5C3D00; }
+  .callout-red { background: var(--flag-bg); border-left: 4px solid var(--flag-red); color: var(--flag-red); }
+  .callout-green { background: var(--accept-bg); border-left: 4px solid var(--accept-green); color: var(--accept-green); }
+  .callout-amber { background: var(--waitlist-bg); border-left: 4px solid var(--waitlist-amber); color: var(--waitlist-amber); }
+
+  /* ── Section divider ── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--gray-400);
+    margin: 18px 0 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  /* ── Legend ── */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--gray-700); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Stats row ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .stat-box {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 14px 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    border-top: 3px solid var(--nd-gold);
+  }
+  .stat-box .stat-val { font-size: 26px; font-weight: 700; color: var(--nd-blue); }
+  .stat-box .stat-label { font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px; }
+  .stat-box .stat-sub { font-size: 11px; color: var(--gray-700); margin-top: 4px; }
+
+  /* ── Print ── */
+  @media print {
+    .tab-bar { display: none; }
+    .tab-panel { display: block !important; page-break-after: always; }
+    .site-header { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-title">
+      <div class="org">The Agoge Initiative</div>
+      <h1>Fellow Scoring Dashboard</h1>
+      <div class="sub">March 17, 2026 · Inaugural Cohort · Dual Scorecard System</div>
+    </div>
+    <div class="header-badges">
+      <span class="badge badge-gold">7 Candidates</span>
+      <span class="badge badge-outline">Confidential</span>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="showTab('dual')">Dual Score Analysis</button>
+    <button class="tab-btn" onclick="showTab('candidates')">Candidate Cards</button>
+    <button class="tab-btn" onclick="showTab('rubric')">Scoring Rubric</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- TAB 1: OVERVIEW                                 -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-overview">
+
+    <div class="callout callout-blue">
+      <strong>Dual Scoring System:</strong> Each candidate carries two scores — a <strong>Formal Score</strong> (rubric-based, 100 points) and a <strong>Qualitative Score</strong> (intangibles-based, 100 points). The <strong>Composite</strong> blends both at configurable weights (default: <strong>70% Formal / 30% Qualitative</strong>). Use both lenses together; neither score alone is sufficient.
+    </div>
+    <div class="callout callout-gold">
+      <strong>⚠️ Original Scorecard Context:</strong> The March 2026 selection scorecard was <strong>formal-only</strong> — 7 rubric categories, no qualitative component. The "Formal-Only Rank" column below shows each candidate's rank under that original system. The "Rank Shift" column shows how adding Dwight's qualitative layer changes their placement at 70/30 weighting. <strong>Candidates who move up had stronger intangibles than the paper suggested; candidates who move down were paper-strong but less observed in relational contexts.</strong>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val">7</div>
+        <div class="stat-label">Total Candidates</div>
+        <div class="stat-sub">Inaugural cohort pool</div>
+      </div>
+      <div class="stat-box" style="border-top-color: var(--accept-green)">
+        <div class="stat-val" style="color: var(--accept-green)">2</div>
+        <div class="stat-label">Clear Accepts</div>
+        <div class="stat-sub">Formal ≥ 75</div>
+      </div>
+      <div class="stat-box" style="border-top-color: var(--uva-orange)">
+        <div class="stat-val" style="color: var(--uva-orange)">3</div>
+        <div class="stat-label">Genuine Debates</div>
+        <div class="stat-sub">Borderline or conflicted</div>
+      </div>
+      <div class="stat-box" style="border-top-color: var(--gray-400)">
+        <div class="stat-val" style="color: var(--gray-400)">2</div>
+        <div class="stat-label">Likely Waitlists</div>
+        <div class="stat-sub">Formal 60–67</div>
+      </div>
+      <div class="stat-box" style="border-top-color: var(--nd-gold)">
+        <div class="stat-val" style="color: var(--nd-gold)" id="stat-shifts">—</div>
+        <div class="stat-label">Rank Shifts</div>
+        <div class="stat-sub">Candidates who move with qual added</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 All Candidates — Ranked Overview</div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--nd-blue)"></div>Formal Score — original scorecard</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--uva-blue)"></div>Formal-Only Rank — rank if qual excluded</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--uva-orange)"></div>Qualitative Score — Dwight-observed intangibles</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--nd-gold)"></div>Composite (70/30 blend) — current ranking</div>
+      </div>
+
+      <table class="overview-table">
+        <thead>
+          <tr>
+            <th>Composite Rank</th>
+            <th>Candidate</th>
+            <th>School / Sport</th>
+            <th>Formal Score</th>
+            <th>Formal-Only Rank</th>
+            <th>Qual Score</th>
+            <th>Composite (70/30)</th>
+            <th>Rank Shift</th>
+            <th>Rec</th>
+            <th>Key Flag</th>
+          </tr>
+        </thead>
+        <tbody id="overview-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📈 Score Comparison — All Candidates</div>
+      <div class="compare-bars-wrap" id="compare-bars"></div>
+    </div>
+
+  </div><!-- /tab-overview -->
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- TAB 2: DUAL SCORE ANALYSIS                      -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-dual">
+
+    <div class="callout callout-gold">
+      <strong>Why Dual Scoring?</strong> The formal rubric captures what's on paper. The qualitative score captures what Dwight sees in the room — the hunger, the follow-through, the relationship instinct that predicts success in a relationship-driven industry. Neither score alone tells the full story.
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚖️ Score Delta Analysis — Where Formal and Qualitative Diverge</div>
+      <p style="font-size:12.5px; color:var(--gray-700); margin-bottom:16px;">
+        Candidates with a <strong>high qualitative / low formal gap</strong> are hidden gems — their intangibles may outpace their application. Candidates with a <strong>high formal / low qualitative gap</strong> may be paper-strong but less proven in relational and behavioral dimensions.
+      </p>
+      <div id="delta-chart"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔀 Composite Weight Simulator</div>
+      <p style="font-size:12.5px; color:var(--gray-700); margin-bottom:14px;">
+        Adjust the blend weight to see how composite rankings shift. <strong>Default: 70% Formal / 30% Qualitative.</strong>
+      </p>
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px; flex-wrap:wrap;">
+        <label style="font-size:13px; font-weight:600; color:var(--nd-blue)">Formal Weight:</label>
+        <input type="range" id="weight-slider" min="0" max="100" value="70" step="5"
+          style="width:200px; accent-color:var(--nd-blue);"
+          oninput="updateWeights(this.value)"/>
+        <span id="weight-display" style="font-size:13px; font-weight:700; color:var(--nd-blue); min-width:120px;">70% F / 30% Q</span>
+      </div>
+      <table class="overview-table" id="simulator-table">
+        <thead>
+          <tr>
+            <th>Rank</th><th>Candidate</th><th>Formal (100)</th><th>Qual (100)</th><th>Composite</th><th>Change from Default</th>
+          </tr>
+        </thead>
+        <tbody id="sim-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🕸 Qualitative Category Breakdown</div>
+      <p style="font-size:12.5px; color:var(--gray-700); margin-bottom:16px;">Radar charts show each candidate's qualitative profile across the six intangible dimensions.</p>
+      <div id="radar-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:20px;"></div>
+    </div>
+
+  </div><!-- /tab-dual -->
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- TAB 3: CANDIDATE CARDS                          -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-candidates">
+    <div class="callout callout-blue">
+      <strong>Candidate Cards</strong> combine both scoring systems with session facilitation notes. Use these during or before the selection meeting.
+    </div>
+    <div class="cand-grid" id="cand-grid"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- TAB 4: SCORING RUBRIC                           -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-rubric">
+
+    <div class="callout callout-blue">
+      <strong>Two-Part Rubric System.</strong> Part A is the existing formal scorecard (used in this cycle's evaluation). Part B is the proposed qualitative rubric — capturing intangibles Dwight observes that the formal rubric cannot score. Both are designed to be scored on a 1–5 scale per category, then weighted to a 100-point total.
+    </div>
+
+    <div class="card">
+      <div class="card-title">PART A — Formal Scorecard Rubric</div>
+      <p style="font-size:12px; color:var(--gray-400); margin-bottom:16px;">Seven categories · Weighted to 100 points · Administered by evaluator review of application materials</p>
+      <div class="rubric-grid" id="formal-rubric"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="border-bottom-color: var(--uva-orange); color: var(--uva-blue)">PART B — Qualitative Intangibles Rubric <span style="font-size:11px; background:var(--uva-orange); color:white; padding:2px 8px; border-radius:8px; margin-left:8px; font-weight:600;">PROPOSED</span></div>
+      <p style="font-size:12px; color:var(--gray-400); margin-bottom:16px;">Six categories · Weighted to 100 points · Scored by Dwight or senior team member with direct candidate contact</p>
+      <div class="callout callout-amber">
+        <strong>Scoring Authority:</strong> Part B scores should only be assigned by someone with direct, in-person or repeated contact with the candidate. These are not application-document scores — they require relationship-based observation.
+      </div>
+      <div class="rubric-grid" id="qual-rubric"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📐 Score Calculation Reference</div>
+      <table class="overview-table" style="font-size:12px;">
+        <thead>
+          <tr>
+            <th>Band</th><th>Formal Score Range</th><th>Qual Score Range</th><th>Composite Range</th><th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="band-tag band-strong">Strong Accept</span></td><td>90–100</td><td>90–100</td><td>90–100</td><td>Exceptional across both dimensions</td></tr>
+          <tr><td><span class="band-tag band-accept">Accept</span></td><td>75–89</td><td>75–89</td><td>75–89</td><td>Clear admit — meets bar on measurable and observable dimensions</td></tr>
+          <tr><td><span class="band-tag band-waitlist">Waitlist</span></td><td>60–74</td><td>60–74</td><td>60–74</td><td>Potential present; gap in one or more dimensions</td></tr>
+          <tr><td><span class="band-tag band-flag">Not Selected</span></td><td>&lt;60</td><td>&lt;60</td><td>&lt;60</td><td>Does not meet program threshold</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /tab-rubric -->
+
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════
+const FORMAL_WEIGHT_DEFAULT = 0.7;
+let formalWeight = FORMAL_WEIGHT_DEFAULT;
+
+// Qualitative categories (intangibles)
+const QUAL_CATS = [
+  { key: 'presence',      label: 'Professional Presence',  weight: 3, color: '#7B4FBE', desc: 'How the candidate carries and presents themselves in person; first impression in employer contexts' },
+  { key: 'hunger',        label: 'Hunger & Drive',         weight: 4, color: '#C0392B', desc: 'Intrinsic motivation — do they want this, or are they being placed? Observable through initiative and follow-up' },
+  { key: 'coachability',  label: 'Coachability',           weight: 3, color: '#2980B9', desc: 'Willingness to receive feedback, adjust, and improve; comfort with being wrong' },
+  { key: 'network',       label: 'Network Instinct',       weight: 3, color: '#27AE60', desc: 'Ability to build and activate relationships; awareness of relational capital as a professional asset' },
+  { key: 'curiosity',     label: 'Domain Curiosity',       weight: 3, color: '#E67E22', desc: 'Genuine interest in commercial real estate — not just as a job, but as a field worth understanding' },
+  { key: 'followthrough', label: 'Follow-Through',         weight: 4, color: '#8E44AD', desc: 'Does the candidate do what they say they will? Demonstrated through engagement behaviors before selection' },
+];
+const QUAL_MAX = QUAL_CATS.reduce((s,c) => s + c.weight * 5, 0); // 5 per category * weight
+
+// Formal categories
+const FORMAL_CATS = [
+  { key: 'academic',      label: 'Academic Performance',   weight: 4 },
+  { key: 'career',        label: 'Career Clarity',         weight: 3 },
+  { key: 'athletic',      label: 'Athletic Traits',        weight: 3 },
+  { key: 'resilience',    label: 'Resilience',             weight: 3 },
+  { key: 'profready',     label: 'Professional Readiness', weight: 2 },
+  { key: 'commitment',    label: 'Commitment',             weight: 2 },
+  { key: 'fit',           label: 'Program Fit',            weight: 3 },
+];
+
+// Candidate data
+// formalCats: scores per category (1-5 scale matching original scorecard)
+// qualCats: scores per qualitative category (1-5 scale, Dwight-observed)
+const CANDIDATES = [
+  {
+    name: 'Jason Onye',
+    school: 'Notre Dame',
+    sport: 'Football',
+    evaluator: 'McKinney',
+    formalScore: 65,
+    formalCats: { academic: 3, career: 3, athletic: 4, resilience: 3, profready: 2, commitment: 2, fit: 3 },
+    qualScore: 82, // high — Dwight's direct observation
+    qualCats: { presence: 4, hunger: 5, coachability: 4, network: 4, curiosity: 3, followthrough: 5 },
+    rec: 'Accept (flagged)',
+    recClass: 'band-waitlist',
+    flags: [
+      { icon: '📓', text: '<strong>Brings a notebook to every meeting.</strong> Prepared, attentive, signals professional seriousness.' },
+      { icon: '⚡', text: '<strong>Follows up immediately after every interaction.</strong> One of the most consistent engagement behaviors in the cohort.' },
+      { icon: '🤝', text: 'Came to his meeting with a <strong>mentor and a potential donor</strong> — demonstrates network instinct and donor proximity.' },
+      { icon: '👤', text: '<strong>Contemporary of Robert Byron.</strong> Relationship signal within the athlete-to-industry pipeline.' },
+      { icon: '⚠️', text: 'Commitment scored 2 by evaluator — <strong>limited availability flagged.</strong> Qualitative observation directly contradicts this.' },
+    ],
+    cardClass: 'flag-mid',
+  },
+  {
+    name: 'Tianji Lukins',
+    school: 'Notre Dame',
+    sport: 'Track & Field (alum)',
+    evaluator: 'McKinney',
+    formalScore: 76,
+    formalCats: { academic: 3, career: 4, athletic: 4, resilience: 4, profready: 3, commitment: 4, fit: 4 },
+    qualScore: 68,
+    qualCats: { presence: 4, hunger: 3, coachability: 3, network: 3, curiosity: 3, followthrough: 3 },
+    rec: 'Accept',
+    recClass: 'band-accept',
+    flags: [
+      { icon: '⚠️', text: '<strong>Eligibility question:</strong> Lukins has graduated and is employed full-time. No longer an active student-athlete.' },
+      { icon: '🎓', text: 'Strong academic/athletic profile on paper — high formal score reflects well-rounded application.' },
+      { icon: '🏢', text: 'Current full-time employment may signal readiness, but <strong>conflicts with D-I athlete program identity.</strong>' },
+      { icon: '🎥', text: 'No video submitted.' },
+    ],
+    cardClass: 'flag-eligible',
+  },
+  {
+    name: 'Zach Kempe',
+    school: 'Notre Dame',
+    sport: 'Baseball (grad student)',
+    evaluator: 'Augustine',
+    formalScore: 75,
+    formalCats: { academic: 4, career: 3, athletic: 4, resilience: 4, profready: 3, commitment: 3, fit: 4 },
+    qualScore: 74,
+    qualCats: { presence: 3, hunger: 4, coachability: 4, network: 4, curiosity: 3, followthrough: 3 },
+    rec: 'Accept',
+    recClass: 'band-accept',
+    flags: [
+      { icon: '⚾', text: '<strong>Baseball at Notre Dame.</strong> Dwight and his wife are closely connected to John Murphy (ND baseball).' },
+      { icon: '📅', text: 'Grad student — <strong>May/June timeline carries high expectations</strong> from Dwight\'s network.' },
+      { icon: '🎥', text: 'No video submitted. Augustine flagged "needs more assessment."' },
+      { icon: '📚', text: 'Grad student timeline: confirm whether program schedule is compatible.' },
+    ],
+    cardClass: 'flag-strong',
+  },
+  {
+    name: 'Eryn Murphy',
+    school: 'Notre Dame',
+    sport: 'N/A',
+    evaluator: 'McKinney',
+    formalScore: 73,
+    formalCats: { academic: 4, career: 3, athletic: 3, resilience: 3, profready: 3, commitment: 3, fit: 4 },
+    qualScore: 65,
+    qualCats: { presence: 3, hunger: 3, coachability: 4, network: 3, curiosity: 3, followthrough: 3 },
+    rec: 'Accept/Waitlist',
+    recClass: 'band-waitlist',
+    flags: [
+      { icon: '📅', text: '<strong>2028 graduation date</strong> — limits near-term placement timeline.' },
+      { icon: '⚡', text: 'Resilience scored 3; Professional Readiness scored 3 — both passing but not strong for inaugural cohort.' },
+      { icon: '🏆', text: 'First-cohort optics: does Murphy\'s profile fit the story Agoge needs to tell in Year 1?' },
+    ],
+    cardClass: 'flag-mid',
+  },
+  {
+    name: 'Luke Talich',
+    school: 'Notre Dame',
+    sport: 'Football (walk-on)',
+    evaluator: 'McKinney',
+    formalScore: 71,
+    formalCats: { academic: 3, career: 3, athletic: 3, resilience: 4, profready: 1, commitment: 3, fit: 4 },
+    qualScore: 55,
+    qualCats: { presence: 2, hunger: 3, coachability: 3, network: 2, curiosity: 2, followthrough: 2 },
+    rec: 'Accept/Waitlist',
+    recClass: 'band-waitlist',
+    flags: [
+      { icon: '⚠️', text: '<strong>Professional Readiness scored 1</strong> — lowest in cohort.' },
+      { icon: '🏈', text: 'Mentioned <strong>pro football aspirations</strong> — competing commitment question.' },
+      { icon: '📄', text: 'No video <strong>and</strong> no resume submitted — thinnest application among borderline candidates.' },
+      { icon: '🥾', text: 'Walk-on athlete — different pathway than recruited athletes; may understate grit.' },
+    ],
+    cardClass: 'flag-mid',
+  },
+  {
+    name: 'Madelyn Packer',
+    school: 'UVA / Cornell',
+    sport: 'Track & Field',
+    evaluator: 'McKinney',
+    formalScore: 67,
+    formalCats: { academic: 2, career: 3, athletic: 3, resilience: 3, profready: 3, commitment: 3, fit: 3 },
+    qualScore: 63,
+    qualCats: { presence: 3, hunger: 3, coachability: 3, network: 2, curiosity: 2, followthrough: 3 },
+    rec: 'Waitlist',
+    recClass: 'band-waitlist',
+    flags: [
+      { icon: '📊', text: '<strong>GPA not submitted</strong> — Academic score docked significantly. True academic standing unknown.' },
+      { icon: '🏥', text: '<strong>Primary stated interest is medicine</strong>, not CRE — program fit concern independent of GPA gap.' },
+      { icon: '💡', text: 'Consider offering 72-hour GPA resubmission window before finalizing waitlist.' },
+    ],
+    cardClass: 'flag-waitlist',
+  },
+  {
+    name: 'William Young',
+    school: 'Notre Dame',
+    sport: 'N/A (military)',
+    evaluator: 'McKinney',
+    formalScore: 65,
+    formalCats: { academic: 3, career: 2, athletic: 3, resilience: 4, profready: 2, commitment: 2, fit: 3 },
+    qualScore: 52,
+    qualCats: { presence: 2, hunger: 3, coachability: 3, network: 2, curiosity: 2, followthrough: 2 },
+    rec: 'Waitlist',
+    recClass: 'band-waitlist',
+    flags: [
+      { icon: '📄', text: 'No video, no resume, no LinkedIn — <strong>most incomplete application in cohort.</strong>' },
+      { icon: '📅', text: '2028 graduation + Commitment scored 2 — two independent timeline concerns.' },
+      { icon: '🎖️', text: 'Military background framing may explain non-traditional application format — not necessarily disengagement.' },
+    ],
+    cardClass: 'flag-waitlist',
+  },
+];
+
+// Sort by composite (default 60/40)
+function computeComposite(c, fw) {
+  return Math.round(c.formalScore * fw + c.qualScore * (1 - fw));
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER OVERVIEW
+// ═══════════════════════════════════════════════════════════
+function renderOverview() {
+  // Composite ranking (70/30 default or current weight)
+  const sorted = [...CANDIDATES].sort((a,b) => computeComposite(b, formalWeight) - computeComposite(a, formalWeight));
+  // Formal-only ranking (original scorecard — no qualitative)
+  const formalSorted = [...CANDIDATES].sort((a,b) => b.formalScore - a.formalScore);
+  const formalRankMap = {};
+  formalSorted.forEach((c, i) => { formalRankMap[c.name] = i + 1; });
+
+  const tbody = document.getElementById('overview-tbody');
+  tbody.innerHTML = '';
+
+  sorted.forEach((c, i) => {
+    const compositeRank = i + 1;
+    const formalRank = formalRankMap[c.name];
+    const rankDelta = formalRank - compositeRank; // positive = moved UP with qual added
+    let shiftHtml = '';
+    if (rankDelta > 0) {
+      shiftHtml = `<span style="color:#145A14; font-weight:700; font-size:13px">↑ +${rankDelta}</span><div style="font-size:10px; color:#145A14">qual boost</div>`;
+    } else if (rankDelta < 0) {
+      shiftHtml = `<span style="color:#8B0000; font-weight:700; font-size:13px">↓ ${rankDelta}</span><div style="font-size:10px; color:#8B0000">formal-heavy</div>`;
+    } else {
+      shiftHtml = `<span style="color:var(--gray-400); font-weight:700; font-size:13px">= 0</span><div style="font-size:10px; color:var(--gray-400)">no change</div>`;
+    }
+
+    const comp = computeComposite(c, formalWeight);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--gray-400); font-size:12px; font-weight:700">${compositeRank}</td>
+      <td>
+        <div class="cand-name">${c.name}</div>
+        <div class="cand-sport">${c.sport}</div>
+      </td>
+      <td style="font-size:12px">${c.school}</td>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:700; color:var(--nd-blue); font-size:13px">${c.formalScore}</span>
+          <div class="bar-container" style="max-width:80px">
+            <div class="bar-track"><div class="bar-fill bar-formal" style="width:${c.formalScore}%"></div></div>
+          </div>
+        </div>
+      </td>
+      <td style="text-align:center;">
+        <span style="font-size:15px; font-weight:700; color:var(--uva-blue)">#${formalRank}</span>
+        <div style="font-size:10px; color:var(--gray-400)">formal only</div>
+      </td>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:700; color:var(--uva-orange); font-size:13px">${c.qualScore}</span>
+          <div class="bar-container" style="max-width:80px">
+            <div class="bar-track"><div class="bar-fill bar-qual" style="width:${c.qualScore}%"></div></div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:700; color:#7A6212; font-size:14px">${comp}</span>
+          <div class="bar-container" style="max-width:80px">
+            <div class="bar-track"><div class="bar-fill bar-composite" style="width:${comp}%"></div></div>
+          </div>
+        </div>
+      </td>
+      <td style="text-align:center;">${shiftHtml}</td>
+      <td><span class="band-tag ${c.recClass}">${c.rec}</span></td>
+      <td style="font-size:11px; color:var(--gray-700); max-width:140px">${c.flags[0].text.replace(/<[^>]+>/g,'').substring(0,60)}…</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Update rank-shifts stat box
+  const shiftCount = sorted.filter((c, i) => formalRankMap[c.name] !== (i + 1)).length;
+  const statShifts = document.getElementById('stat-shifts');
+  if (statShifts) statShifts.textContent = shiftCount;
+
+  // Compare bars
+  const compareBars = document.getElementById('compare-bars');
+  compareBars.innerHTML = '';
+  sorted.forEach(c => {
+    const comp = computeComposite(c, formalWeight);
+    compareBars.innerHTML += `
+      <div class="compare-row">
+        <div class="compare-name">${c.name}</div>
+        <div class="compare-tracks">
+          <div class="compare-track">
+            <div style="width:52px; font-size:10px; color:var(--nd-blue); font-weight:600">Formal</div>
+            <div style="flex:1; background:var(--gray-200); border-radius:4px; height:10px; overflow:hidden;">
+              <div class="compare-fill bar-formal" style="width:${c.formalScore}%"></div>
+            </div>
+            <div class="compare-val" style="color:var(--nd-blue)">${c.formalScore}</div>
+          </div>
+          <div class="compare-track">
+            <div style="width:52px; font-size:10px; color:var(--uva-orange); font-weight:600">Qual</div>
+            <div style="flex:1; background:var(--gray-200); border-radius:4px; height:10px; overflow:hidden;">
+              <div class="compare-fill bar-qual" style="width:${c.qualScore}%"></div>
+            </div>
+            <div class="compare-val" style="color:var(--uva-orange)">${c.qualScore}</div>
+          </div>
+          <div class="compare-track">
+            <div style="width:52px; font-size:10px; color:#7A6212; font-weight:600">Comp.</div>
+            <div style="flex:1; background:var(--gray-200); border-radius:4px; height:10px; overflow:hidden;">
+              <div class="compare-fill bar-composite" style="width:${comp}%"></div>
+            </div>
+            <div class="compare-val" style="color:#7A6212">${comp}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER DUAL ANALYSIS
+// ═══════════════════════════════════════════════════════════
+function renderDelta() {
+  const sorted = [...CANDIDATES].sort((a,b) => (b.qualScore - b.formalScore) - (a.qualScore - a.formalScore));
+  const wrap = document.getElementById('delta-chart');
+  wrap.innerHTML = '';
+
+  sorted.forEach(c => {
+    const delta = c.qualScore - c.formalScore;
+    const sign = delta >= 0 ? '+' : '';
+    const color = delta > 0 ? 'var(--accept-green)' : delta < -5 ? 'var(--flag-red)' : 'var(--gray-400)';
+    const label = delta > 8 ? 'Qualitative upside — intangibles exceed paper' :
+                  delta > 0 ? 'Slight qualitative advantage' :
+                  delta > -5 ? 'Roughly aligned' :
+                  'Paper-strong; qualitative needs observation';
+
+    wrap.innerHTML += `
+      <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--gray-200);">
+        <div style="width:130px; font-size:13px; font-weight:600; color:var(--nd-blue); flex-shrink:0">${c.name}</div>
+        <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+          <div style="text-align:center">
+            <div style="font-size:18px; font-weight:700; color:var(--nd-blue)">${c.formalScore}</div>
+            <div style="font-size:9px; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px">Formal</div>
+          </div>
+          <div style="font-size:20px; color:var(--gray-400); padding:0 4px">→</div>
+          <div style="text-align:center">
+            <div style="font-size:18px; font-weight:700; color:var(--uva-orange)">${c.qualScore}</div>
+            <div style="font-size:9px; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px">Qual</div>
+          </div>
+          <div style="text-align:center; margin-left:8px;">
+            <div style="font-size:18px; font-weight:700; color:${color}">${sign}${delta}</div>
+            <div style="font-size:9px; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px">Delta</div>
+          </div>
+        </div>
+        <div style="font-size:12px; color:var(--gray-700); flex:1; font-style:italic">${label}</div>
+        <span class="band-tag ${c.recClass}">${c.rec}</span>
+      </div>
+    `;
+  });
+}
+
+function renderSimulator() {
+  updateWeights(70);
+}
+
+function updateWeights(val) {
+  formalWeight = val / 100;
+  const qualW = 100 - val;
+  document.getElementById('weight-display').textContent = `${val}% F / ${qualW}% Q`;
+
+  const sorted = [...CANDIDATES].sort((a,b) => computeComposite(b, formalWeight) - computeComposite(a, formalWeight));
+  const defaultSorted = [...CANDIDATES].sort((a,b) => computeComposite(b, FORMAL_WEIGHT_DEFAULT) - computeComposite(a, FORMAL_WEIGHT_DEFAULT));
+
+  const tbody = document.getElementById('sim-tbody');
+  tbody.innerHTML = '';
+  sorted.forEach((c, i) => {
+    const comp = computeComposite(c, formalWeight);
+    const defaultRank = defaultSorted.findIndex(d => d.name === c.name) + 1;
+    const rankChange = defaultRank - (i+1);
+    const rankStr = rankChange > 0 ? `<span style="color:var(--accept-green)">▲${rankChange}</span>` :
+                    rankChange < 0 ? `<span style="color:var(--flag-red)">▼${Math.abs(rankChange)}</span>` :
+                    '<span style="color:var(--gray-400)">—</span>';
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${i+1}</td>
+        <td style="font-weight:600">${c.name}</td>
+        <td style="color:var(--nd-blue); font-weight:600">${c.formalScore}</td>
+        <td style="color:var(--uva-orange); font-weight:600">${c.qualScore}</td>
+        <td style="font-weight:700; font-size:14px; color:#7A6212">${comp}</td>
+        <td>${rankStr}</td>
+      </tr>
+    `;
+  });
+
+  renderOverview();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RADAR CHARTS (SVG)
+// ═══════════════════════════════════════════════════════════
+function renderRadarGrid() {
+  const grid = document.getElementById('radar-grid');
+  grid.innerHTML = '';
+  CANDIDATES.forEach(c => {
+    const div = document.createElement('div');
+    div.style.cssText = 'background:white; border-radius:8px; padding:14px; box-shadow:0 1px 4px rgba(0,0,0,0.08);';
+    div.innerHTML = `
+      <div style="font-size:13px; font-weight:700; color:var(--nd-blue); margin-bottom:2px">${c.name}</div>
+      <div style="font-size:11px; color:var(--gray-400); margin-bottom:10px">${c.sport} · Qual: <strong style="color:var(--uva-orange)">${c.qualScore}</strong></div>
+      ${buildRadar(c)}
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function buildRadar(c) {
+  const size = 180;
+  const cx = size/2, cy = size/2, r = 70;
+  const n = QUAL_CATS.length;
+  const scores = QUAL_CATS.map(cat => c.qualCats[cat.key] / 5);
+
+  let polygonPts = '';
+  let axisLines = '';
+  let labels = '';
+  let gridLines = '';
+
+  // Grid circles
+  for (let g = 1; g <= 5; g++) {
+    let pts = '';
+    for (let i = 0; i < n; i++) {
+      const angle = (Math.PI * 2 * i / n) - Math.PI/2;
+      const rg = r * g / 5;
+      pts += `${cx + rg * Math.cos(angle)},${cy + rg * Math.sin(angle)} `;
+    }
+    gridLines += `<polygon points="${pts.trim()}" fill="none" stroke="#E8E8E8" stroke-width="1"/>`;
+  }
+
+  // Axes + labels
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i / n) - Math.PI/2;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    axisLines += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#E0E0E0" stroke-width="1"/>`;
+
+    const lx = cx + (r + 18) * Math.cos(angle);
+    const ly = cy + (r + 18) * Math.sin(angle);
+    const anchor = Math.cos(angle) < -0.3 ? 'end' : Math.cos(angle) > 0.3 ? 'start' : 'middle';
+    const shortLabel = QUAL_CATS[i].label.split(' ')[0];
+    labels += `<text x="${lx}" y="${ly}" text-anchor="${anchor}" dominant-baseline="middle" font-size="9" fill="#666" font-family="Calibri,Arial">${shortLabel}</text>`;
+  }
+
+  // Score polygon
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i / n) - Math.PI/2;
+    const rp = r * scores[i];
+    polygonPts += `${cx + rp * Math.cos(angle)},${cy + rp * Math.sin(angle)} `;
+  }
+
+  // Score dots
+  let dots = '';
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i / n) - Math.PI/2;
+    const rp = r * scores[i];
+    dots += `<circle cx="${cx + rp * Math.cos(angle)}" cy="${cy + rp * Math.sin(angle)}" r="3" fill="${QUAL_CATS[i].color}" stroke="white" stroke-width="1"/>`;
+  }
+
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="radar" style="display:block;margin:0 auto;">
+      ${gridLines}
+      ${axisLines}
+      <polygon points="${polygonPts.trim()}" fill="rgba(0,85,150,0.15)" stroke="var(--uva-blue)" stroke-width="1.5"/>
+      ${dots}
+      ${labels}
+    </svg>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CANDIDATE CARDS
+// ═══════════════════════════════════════════════════════════
+function renderCandCards() {
+  const grid = document.getElementById('cand-grid');
+  grid.innerHTML = '';
+
+  CANDIDATES.forEach(c => {
+    const comp = computeComposite(c, formalWeight);
+    const card = document.createElement('div');
+    card.className = `cand-card ${c.cardClass}`;
+
+    // Formal category bars
+    const fMax = FORMAL_CATS.reduce((s,cat) => s + cat.weight * 5, 0);
+    let fCatBars = '';
+    FORMAL_CATS.forEach(cat => {
+      const score = c.formalCats[cat.key];
+      const pct = (score / 5) * 100;
+      const col = score >= 4 ? 'var(--accept-green)' : score >= 3 ? 'var(--nd-blue)' : score >= 2 ? 'var(--waitlist-amber)' : 'var(--flag-red)';
+      fCatBars += `
+        <div class="cat-row">
+          <div class="cat-name">${cat.label}</div>
+          <div class="cat-track"><div class="cat-fill" style="width:${pct}%; background:${col}"></div></div>
+          <div class="cat-score" style="color:${col}">${score}</div>
+        </div>
+      `;
+    });
+
+    // Qualitative category bars
+    let qCatBars = '';
+    QUAL_CATS.forEach(cat => {
+      const score = c.qualCats[cat.key];
+      const pct = (score / 5) * 100;
+      qCatBars += `
+        <div class="cat-row">
+          <div class="cat-name">${cat.label}</div>
+          <div class="cat-track"><div class="cat-fill q-${cat.key}" style="width:${pct}%"></div></div>
+          <div class="cat-score" style="color:${cat.color}">${score}</div>
+        </div>
+      `;
+    });
+
+    // Flags
+    let flagsHtml = '';
+    c.flags.forEach(f => {
+      flagsHtml += `<div class="flag-item"><span class="flag-icon">${f.icon}</span><div class="flag-text">${f.text}</div></div>`;
+    });
+
+    card.innerHTML = `
+      <div class="cand-header">
+        <div class="cand-header-top">
+          <div class="cand-name-block">
+            <div class="name">${c.name}</div>
+            <div class="meta">${c.school} · ${c.sport} · Evaluator: ${c.evaluator}</div>
+          </div>
+          <span class="band-tag ${c.recClass}">${c.rec}</span>
+        </div>
+        <div style="display:flex; gap:16px; margin-top:10px; flex-wrap:wrap;">
+          <div>
+            <div style="font-size:22px; font-weight:700; color:var(--nd-blue); line-height:1">${c.formalScore}</div>
+            <div style="font-size:10px; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px">Formal</div>
+          </div>
+          <div>
+            <div style="font-size:22px; font-weight:700; color:var(--uva-orange); line-height:1">${c.qualScore}</div>
+            <div style="font-size:10px; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px">Qualitative</div>
+          </div>
+          <div>
+            <div style="font-size:22px; font-weight:700; color:#7A6212; line-height:1">${comp}</div>
+            <div style="font-size:10px; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px">Composite</div>
+          </div>
+        </div>
+      </div>
+      <div class="cand-body">
+        <div class="section-label">Formal Categories (1–5 per cat)</div>
+        ${fCatBars}
+        <div class="section-label" style="margin-top:14px;">Qualitative Intangibles (1–5 per cat · Dwight-observed)</div>
+        ${qCatBars}
+        <div class="section-label" style="margin-top:14px;">Session Notes & Flags</div>
+        <div class="flag-list">${flagsHtml}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// RUBRIC
+// ═══════════════════════════════════════════════════════════
+const FORMAL_RUBRIC = [
+  { name: 'Academic Performance', weight: '4×', levels: [
+    [5, 'GPA 3.7+ · STEM or business major · Dean\'s List / academic honors'],
+    [4, 'GPA 3.3–3.69 · Relevant major · Consistent academic track record'],
+    [3, 'GPA 3.0–3.29 · Acceptable major · No significant academic concerns'],
+    [2, 'GPA 2.7–2.99 · Limited major relevance · Some academic inconsistency'],
+    [1, 'GPA below 2.7 · Or GPA not submitted · Academic concerns present'],
+  ]},
+  { name: 'Career Clarity', weight: '3×', levels: [
+    [5, 'Deeply researched CRE interest · Specific firm/sector targets · Mentor relationships in field'],
+    [4, 'Clear CRE interest · Some industry knowledge · Intentional career framing'],
+    [3, 'General real estate/finance interest · Somewhat aware of CRE as a field'],
+    [2, 'Vague or broad career goals · Limited evidence of CRE-specific interest'],
+    [1, 'Primary interest clearly outside CRE · No evidence of field research'],
+  ]},
+  { name: 'Athletic Traits', weight: '3×', levels: [
+    [5, 'Varsity starter · Captain · Conference honors · Winning program'],
+    [4, 'Varsity contributor · Strong athlete · Recognized within program'],
+    [3, 'Varsity roster · Standard D-I contribution · Solid athletic record'],
+    [2, 'Walk-on or limited role · Less evidence of elite competitive environment'],
+    [1, 'Minimal athletic documentation or no longer active competitor'],
+  ]},
+  { name: 'Resilience', weight: '3×', levels: [
+    [5, 'Navigated significant adversity (injury, loss, family) and grew from it · Documented'],
+    [4, 'Clear examples of setback and recovery · Strong narrative arc'],
+    [3, 'Some resilience examples · Reasonable capacity for setback management'],
+    [2, 'Limited resilience narrative · May not have faced significant adversity yet'],
+    [1, 'Avoidance patterns evident · Difficulty with failure or criticism visible'],
+  ]},
+  { name: 'Professional Readiness', weight: '2×', levels: [
+    [5, 'Polished LinkedIn + resume + video · Strong written/verbal communication · Internship or work experience'],
+    [4, 'Complete materials · Professional presentation · Some experience'],
+    [3, 'Adequate materials · Room to grow but foundation present'],
+    [2, 'Incomplete materials (missing resume or video) · Limited experience'],
+    [1, 'Multiple materials missing · No professional presence established'],
+  ]},
+  { name: 'Commitment', weight: '2×', levels: [
+    [5, 'Full availability · Expressed strong program-specific motivation · No competing obligations'],
+    [4, 'Clear availability · Engaged throughout process · Minor schedule flexibility needed'],
+    [3, 'Generally available · Some scheduling constraints but manageable'],
+    [2, 'Significant availability concerns · Competing obligations flagged'],
+    [1, 'Limited availability · Primary commitment lies elsewhere'],
+  ]},
+  { name: 'Program Fit', weight: '3×', levels: [
+    [5, 'Exceptional fit · Will represent Agoge thesis in the market · Strong on-brand candidate'],
+    [4, 'Strong fit · Aligned with mission · Will benefit from and contribute to program'],
+    [3, 'Reasonable fit · Some alignment · May need additional development'],
+    [2, 'Marginal fit · One or more core fit concerns present'],
+    [1, 'Poor fit · Primary interests or timeline misaligned with program design'],
+  ]},
+];
+
+const QUAL_RUBRIC = [
+  { name: 'Professional Presence', weight: '3×', color: '#7B4FBE', levels: [
+    [5, 'Commands the room. Employers would trust this person immediately. Memorable without trying.'],
+    [4, 'Strong presence. Confident, credible, reads the room well. Would represent Agoge well on day one.'],
+    [3, 'Solid baseline presence. Developing — not yet polished but clearly teachable.'],
+    [2, 'Presence needs development. May struggle in senior-level meetings without coaching.'],
+    [1, 'Presence is a significant concern. Would need substantial development before employer exposure.'],
+  ]},
+  { name: 'Hunger & Drive', weight: '4×', color: '#C0392B', levels: [
+    [5, 'Relentlessly motivated. Doesn\'t need to be pushed — needs to be directed. This is a calling, not a job.'],
+    [4, 'Clearly driven. Pursues beyond what\'s required. Proactive in engagement.'],
+    [3, 'Motivated but may need external structure and accountability to sustain effort.'],
+    [2, 'Passive. Engaged when prompted but not self-initiating. Waiting to be selected, not competing for it.'],
+    [1, 'Does not appear to want this. Going through the motions. No fire visible.'],
+  ]},
+  { name: 'Coachability', weight: '3×', color: '#2980B9', levels: [
+    [5, 'Welcomes challenge. Actively solicits feedback. Demonstrates adjustment in real time.'],
+    [4, 'Open to feedback. Responds well to redirection. Doesn\'t get defensive.'],
+    [3, 'Accepts feedback but may need time to integrate. Generally receptive.'],
+    [2, 'Somewhat resistant. Has a way of doing things and may not easily adjust.'],
+    [1, 'Defensive or dismissive when challenged. Likely to struggle in mentorship context.'],
+  ]},
+  { name: 'Network Instinct', weight: '3×', color: '#27AE60', levels: [
+    [5, 'Already building relationships strategically. Brings people into the room — mentors, donors, advocates.'],
+    [4, 'Network-aware. Understands the value of relationships and actively cultivates them.'],
+    [3, 'Has relationships but does not yet leverage them intentionally.'],
+    [2, 'Transactional relationship orientation or limited network awareness.'],
+    [1, 'No evidence of relational thinking. Not yet aware that the industry runs on relationships.'],
+  ]},
+  { name: 'Domain Curiosity', weight: '3×', color: '#E67E22', levels: [
+    [5, 'Deeply curious about CRE. Reads, researches, asks smart questions. The industry is interesting to them beyond the paycheck.'],
+    [4, 'Genuine interest demonstrated. Can speak to current trends or specific sectors with substance.'],
+    [3, 'Interested in CRE but knowledge is surface-level. Willing to learn.'],
+    [2, 'Lukewarm on the field. Sees CRE as an option, not a destination.'],
+    [1, 'Indifferent or primarily interested in another field. CRE is a fallback.'],
+  ]},
+  { name: 'Follow-Through', weight: '4×', color: '#8E44AD', levels: [
+    [5, 'Does what they say, every time, before being asked. Brings a notebook. Follows up same day. Comes prepared.'],
+    [4, 'Reliable. Follow-through is consistent. Occasionally needs a reminder but never drops the ball.'],
+    [3, 'Generally follows through but inconsistent. May need more structure.'],
+    [2, 'Follow-through is a concern. Has missed commitments or required significant prompting.'],
+    [1, 'Pattern of not following through. Trust has been impacted by missed commitments.'],
+  ]},
+];
+
+function renderRubric() {
+  const formalWrap = document.getElementById('formal-rubric');
+  formalWrap.innerHTML = '';
+  FORMAL_RUBRIC.forEach(cat => {
+    let levels = cat.levels.map(([s,d]) => `
+      <div class="rubric-level">
+        <div class="level-score">${s}</div>
+        <div class="level-desc">${d}</div>
+      </div>
+    `).join('');
+    formalWrap.innerHTML += `
+      <div class="rubric-cat">
+        <div class="rubric-cat-header">${cat.name} <span class="weight">${cat.weight}</span></div>
+        <div class="rubric-levels">${levels}</div>
+      </div>
+    `;
+  });
+
+  const qualWrap = document.getElementById('qual-rubric');
+  qualWrap.innerHTML = '';
+  QUAL_RUBRIC.forEach(cat => {
+    let levels = cat.levels.map(([s,d]) => `
+      <div class="rubric-level">
+        <div class="level-score" style="color:${cat.color}">${s}</div>
+        <div class="level-desc">${d}</div>
+      </div>
+    `).join('');
+    qualWrap.innerHTML += `
+      <div class="rubric-cat qual">
+        <div class="rubric-cat-header" style="background:${cat.color}">${cat.name} <span class="weight" style="background:rgba(255,255,255,0.2); color:white">${cat.weight}</span></div>
+        <div class="rubric-levels">${levels}</div>
+      </div>
+    `;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderOverview();
+  renderDelta();
+  renderSimulator();
+  renderRadarGrid();
+  renderCandCards();
+  renderRubric();
+});
+</script>
+</body>
+</html>
